@@ -173,10 +173,6 @@ public class TileEntityMachineMiningLaser extends TileEntityMachineBase implemen
 							breakBlock(fortune);
 							buildDam();
 						}
-					} else {
-						if (block.getBlockHardness(world, new BlockPos(targetX, targetY, targetZ)) == -1) {
-							isOn = false;
-						}
 					}
 				}
 				if(doesScream()) {
@@ -426,6 +422,10 @@ public class TileEntityMachineMiningLaser extends TileEntityMachineBase implemen
 	}
 
 	private boolean canBreak(IBlockState block, int x, int y, int z) {
+		if (block.getBlockHardness(world, new BlockPos(x, y, z)) == -1) {
+		isOn = false;
+		return false;
+		}
 		Block b = block.getBlock();
 		if(b == Blocks.AIR) return false;
 		if(b == Blocks.BEDROCK) return false;
