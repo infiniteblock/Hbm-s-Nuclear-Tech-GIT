@@ -2,6 +2,7 @@ package com.hbm.items.machine;
 
 import java.util.List;
 
+import com.hbm.util.I18nUtil;
 import com.hbm.items.ModItems;
 
 import net.minecraft.client.util.ITooltipFlag;
@@ -27,11 +28,11 @@ public class ItemDrillbit extends Item {
 	public void addInformation(ItemStack stack, World worldIn, List<String> list, ITooltipFlag flagIn) {
 		EnumDrillType type = ((ItemDrillbit)stack.getItem()).drillType;
 		if(type == null) return;
-		list.add("§eSpeed: " + ((int) (type.speed * 100)) + "%");
-		list.add("§eTier: " + type.tier);
-		if(type.fortune > 0) list.add("§dFortune " + type.fortune);
-		if(type.vein) list.add("§aVein miner");
-		if(type.silk) list.add("§aSilk touch");
+		list.add("§e"+I18nUtil.resolveKey("desc.speed")+" " + ((int) (type.speed * 100)) + "%");
+		list.add("§e"+I18nUtil.resolveKey("desc.tier", type.tier));
+		if(type.fortune > 0) list.add("§d"+I18nUtil.resolveKey("desc.fortune")+" " + type.fortune);
+		if(type.vein) list.add("§a"+I18nUtil.resolveKey("desc.veinminer"));
+		if(type.silk) list.add("§a"+I18nUtil.resolveKey("desc.silktouch"));
 	}
 	
 	public static enum EnumDrillType {
@@ -45,8 +46,8 @@ public class ItemDrillbit extends Item {
 		TCALLOY_DIAMOND	(2.0D, 4, 4, true, true),
 		FERRO			(2.5D, 5, 1, true, true),
 		FERRO_DIAMOND	(2.5D, 5, 4, true, true),
-		DNT				(4.0D, 6000, 1, true, true),
-		DNT_DIAMOND		(4.0D, 6000, 5, true, true);
+		DNT				(5.0D, 6000, 1, true, true),
+		DNT_DIAMOND		(5.0D, 6000, 5, true, true);
 		
 		public double speed;
 		public int tier;

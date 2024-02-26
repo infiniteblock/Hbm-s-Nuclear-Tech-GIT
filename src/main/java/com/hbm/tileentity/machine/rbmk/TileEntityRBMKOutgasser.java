@@ -1,6 +1,7 @@
 package com.hbm.tileentity.machine.rbmk;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import com.hbm.blocks.ModBlocks;
 import com.hbm.entity.projectile.EntityRBMKDebris.DebrisType;
@@ -14,6 +15,8 @@ import com.hbm.items.ModItems;
 import com.hbm.items.machine.ItemFluidIcon;
 import com.hbm.packet.FluidTankPacket;
 import com.hbm.packet.PacketDispatcher;
+import com.hbm.inventory.control_panel.DataValue;
+import com.hbm.inventory.control_panel.DataValueFloat;
 import com.hbm.tileentity.machine.rbmk.TileEntityRBMKConsole.ColumnType;
 
 import net.minecraft.init.Blocks;
@@ -37,6 +40,7 @@ public class TileEntityRBMKOutgasser extends TileEntityRBMKSlottedBase implement
 	public FluidTank gas;
 	public Fluid gasType;
 	public double progress = 0;
+	public double usedFlux = 0;
 	public int duration = 10000;
 
 	public TileEntityRBMKOutgasser() {
@@ -99,6 +103,7 @@ public class TileEntityRBMKOutgasser extends TileEntityRBMKSlottedBase implement
 			ContaminationUtil.neutronActivateItem(inventory.getStackInSlot(0), (float)(flux * 0.001), 1F);
 			this.markDirty();
 		}
+		this.usedFlux = flux;
 	}
 	
 	
@@ -193,8 +198,9 @@ public class TileEntityRBMKOutgasser extends TileEntityRBMKSlottedBase implement
 		NBTTagCompound data = new NBTTagCompound();
 		data.setInteger("gas", this.gas.getFluidAmount());
 		data.setInteger("maxGas", this.gas.getCapacity());
-		data.setString("type", gasType.getName());
+		data.setDouble("usedFlux", this.usedFlux);
 		data.setDouble("progress", this.progress);
+		data.setDouble("maxProgress", this.duration);
 		return data;
 	}
 	
@@ -292,5 +298,17 @@ public class TileEntityRBMKOutgasser extends TileEntityRBMKSlottedBase implement
 	public void unload() {
 		inventory.setStackInSlot(1, ItemStack.EMPTY);
 		this.markDirty();
+	}
+
+	// control panel
+	@Override
+	public Map<String, DataValue> getQueryData() {
+		Map<String, DataValue> data = super.getQueryData();
+
+		data.put("gas", new DataValueFloat(this.gas.getFluidAmount()));
+		data.put("progress", new DataValueFloat((float) this.progress));
+		data.put("maxProgress", new DataValueFloat((float) this.duration));
+
+		return data;
 	}
 }

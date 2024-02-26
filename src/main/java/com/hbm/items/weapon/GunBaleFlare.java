@@ -10,6 +10,7 @@ import com.hbm.lib.HBMSoundHandler;
 import com.hbm.lib.Library;
 import com.hbm.main.MainRegistry;
 
+import com.hbm.util.I18nUtil;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityLivingBase;
@@ -121,10 +122,10 @@ public class GunBaleFlare extends Item {
 		list.add("These bombs were meant for artillery, but");
 		list.add("this makeshift launcher works just fine!");
 		list.add("");
-		list.add("Ammo: Mk.V AMAT Shell");
+		list.add("Ammo: §4Mk.V AMAT Shell");
 		list.add("Damage: 1000");
 		list.add("Creates small nuclear explosion.");
 		list.add("");
-		list.add("[LEGENDARY WEAPON]");
+		list.add(I18nUtil.resolveKey("trait.legendaryweap"));
 	}
 }

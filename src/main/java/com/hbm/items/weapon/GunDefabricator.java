@@ -10,6 +10,7 @@ import com.hbm.lib.HBMSoundHandler;
 import com.hbm.lib.Library;
 import com.hbm.main.MainRegistry;
 
+import com.hbm.util.I18nUtil;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityLivingBase;
@@ -90,12 +91,12 @@ public class GunDefabricator extends Item {
 		if(MainRegistry.polaroidID == 11)
 			list.add("Did you set your alarm for volcano day?");
 		else
-			list.add("BAD WOLF");
+			list.add("§4§lBAD WOLF");
 		list.add("");
-		list.add("Ammo: Defabricator Energy Cell");
+		list.add("Ammo: §cDefabricator Energy Cell");
 		list.add("Damage: 40 - 120");
 		list.add("");
-		list.add("[LEGENDARY WEAPON]");
+		list.add(I18nUtil.resolveKey("trait.legendaryweap"));
 	}
 	
 	@Override

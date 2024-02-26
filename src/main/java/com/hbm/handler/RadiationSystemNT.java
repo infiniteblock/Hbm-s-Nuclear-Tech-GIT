@@ -309,7 +309,7 @@ public class RadiationSystemNT {
 						if(entity instanceof EntityPlayer){
 							EntityPlayer player = (EntityPlayer) entity;
 							if(RadiationConfig.neutronActivation){
-								double recievedRadiation = ContaminationUtil.getNoNeutronPlayerRads(player)*0.00004D-0.0002D; //5Rad/s threshold
+								double recievedRadiation = ContaminationUtil.getNoNeutronPlayerRads(player)*0.00004D-(0.00004D * RadiationConfig.neutronActivationThreshold); //20Rad/s threshold
 								float neutronRads = ContaminationUtil.getPlayerNeutronRads(player);
 								if(neutronRads > 0){
 									ContaminationUtil.contaminate(player, ContaminationUtil.HazardType.NEUTRON, ContaminationUtil.ContaminationType.CREATIVE, neutronRads * 0.05F);
@@ -1113,18 +1113,33 @@ public class RadiationSystemNT {
 		 * @return the pocket at the specified position, or the first pocket if it doesn't exist
 		 */
 		public RadPocket getPocket(BlockPos pos){
-			if(pocketsByBlock == null){
-				//If pocketsByBlock is null, there's only one pocket anyway
-				return pockets[0];
-			} else {
-				int x = pos.getX()&15;
-				int y = pos.getY()&15;
-				int z = pos.getZ()&15;
-				RadPocket p = pocketsByBlock[x*16*16+y*16+z];
-				//If for whatever reason there isn't a pocket there, return the first pocket as a fallback
-				return p == null ? pockets[0] : p;
-			}
-		}
+            if(pocketsByBlock == null){
+                //If pocketsByBlock is null, there's only one pocket anyway
+                return pockets[0];
+            } else {
+                int x = pos.getX()&15;
+                int y = pos.getY()&15;
+                int z = pos.getZ()&15;
+                RadPocket p = pocketsByBlock[x*16*16+y*16+z];
+                if (p == null) {
+                    if (pockets != null && pockets.length > 0 && pockets[0] != null) {
+                        // If for whatever reason there isn't a pocket there, return the first pocket as a fallback if present
+                        return pockets[0];
+                    } else {
+                        // If first pocket isn't present either, create one and warn
+                        p = new RadPocket(this, 0);
+                        p.radiation = 0;
+                        if (pockets == null || pockets.length == 0) {
+                            pockets = new RadPocket[1];
+                        }
+                        pockets[0] = p;
+                        return p;
+                    }
+                } else {
+                    return p;
+                }
+            }
+        }
 		
 		/**
 		 * Attempts to distribute radiation from another sub chunk into this one's pockets.

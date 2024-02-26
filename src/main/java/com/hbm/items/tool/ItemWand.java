@@ -3,6 +3,7 @@ package com.hbm.items.tool;
 import java.util.List;
 
 import com.hbm.items.ModItems;
+import com.hbm.util.I18nUtil;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -18,6 +19,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
 public class ItemWand extends Item {
@@ -31,22 +33,22 @@ public class ItemWand extends Item {
 	
 	@Override
 	public void addInformation(ItemStack itemstack, World worldIn, List<String> list, ITooltipFlag flagIn) {
-		list.add("Creative-only item");
-		list.add("\"Destruction brings creation\"");
-		list.add("(Set positions with right click,");
-		list.add("set block with shift-right click!)");
+		list.add(I18nUtil.resolveKey("desc.creative"));
+		list.add(I18nUtil.resolveKey("desc.contructionwand.1"));
+		list.add(I18nUtil.resolveKey("desc.contructionwand.2"));
+		list.add(I18nUtil.resolveKey("desc.contructionwand.3"));
 		
 		if(itemstack.getTagCompound() != null &&
 				!(itemstack.getTagCompound().getInteger("x") == 0 &&
 						itemstack.getTagCompound().getInteger("y") == 0 &&
 								itemstack.getTagCompound().getInteger("z") == 0))
 		{
-			list.add("Pos: " + itemstack.getTagCompound().getInteger("x") + ", " + itemstack.getTagCompound().getInteger("y") + ", " + itemstack.getTagCompound().getInteger("z"));
+			list.add(I18nUtil.resolveKey("desc.contructionwand.pos", itemstack.getTagCompound().getInteger("x"), itemstack.getTagCompound().getInteger("y"), itemstack.getTagCompound().getInteger("z")));
 		} else {
-			list.add("Positions not set!");
+			list.add(I18nUtil.resolveKey("desc.contructionwand.posnoset"));
 		}
 		if(itemstack.getTagCompound() != null)
-			list.add("Block saved: " + Block.getBlockById(itemstack.getTagCompound().getInteger("block")).getUnlocalizedName());
+			list.add(I18nUtil.resolveKey("desc.contructionwand.blocksaved", I18nUtil.resolveKey(Block.getBlockById(itemstack.getTagCompound().getInteger("block")).getUnlocalizedName())));
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -64,7 +66,7 @@ public class ItemWand extends Item {
 			stack.getTagCompound().setInteger("block", Block.getIdFromBlock(state.getBlock()));
 			stack.getTagCompound().setInteger("meta", state.getBlock().getMetaFromState(state));
 			if(world.isRemote)
-				player.sendMessage(new TextComponentTranslation("Set block " + Block.getBlockById(stack.getTagCompound().getInteger("block")).getUnlocalizedName()));
+				player.sendMessage(new TextComponentTranslation("chat.constructionwand.setblock").appendSibling(new TextComponentTranslation(Block.getBlockById(stack.getTagCompound().getInteger("block")).getUnlocalizedName())));
 		} else {
 			if(stack.getTagCompound().getInteger("x") == 0 &&
 					stack.getTagCompound().getInteger("y") == 0 &&
@@ -74,7 +76,7 @@ public class ItemWand extends Item {
 				stack.getTagCompound().setInteger("y", pos.getY());
 				stack.getTagCompound().setInteger("z", pos.getZ());
 				if(world.isRemote)
-					player.sendMessage(new TextComponentTranslation("Position set!"));
+					player.sendMessage(new TextComponentTranslation("chat.posset"));
 			} else {
 				
 				int x = stack.getTagCompound().getInteger("x");
@@ -100,7 +102,7 @@ public class ItemWand extends Item {
 					}
 				}
 				if(world.isRemote)
-					player.sendMessage(new TextComponentTranslation("Selection filled!"));
+					player.sendMessage(new TextComponentTranslation("chat.constructionwand.filled"));
 			}
 		}
     	
@@ -119,7 +121,7 @@ public class ItemWand extends Item {
 			stack.getTagCompound().setInteger("block", 0);
 			stack.getTagCompound().setInteger("meta", 0);
 			if(world.isRemote)
-				player.sendMessage(new TextComponentTranslation("Set block " + Block.getBlockById(stack.getTagCompound().getInteger("block")).getUnlocalizedName()));
+				player.sendMessage(new TextComponentTranslation("chat.constructionwand.setblock").appendSibling(new TextComponentTranslation(Block.getBlockById(stack.getTagCompound().getInteger("block")).getUnlocalizedName())));
 			return ActionResult.newResult(EnumActionResult.SUCCESS, stack);
 		}
 				

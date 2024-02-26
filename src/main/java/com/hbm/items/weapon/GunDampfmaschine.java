@@ -9,6 +9,7 @@ import com.hbm.entity.projectile.EntityRocket;
 import com.hbm.items.ModItems;
 import com.hbm.lib.HBMSoundHandler;
 
+import com.hbm.util.I18nUtil;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -101,10 +102,10 @@ public class GunDampfmaschine extends Item {
 		list.add("");
 		list.add("oh sorry how did this get here i'm not good with computer can somebody tell me how i can get out of here oh fiddlesticks this is not good oh no please can anybody hear me i am afraid please for the love of god somebody get me out of here");
 		list.add("");
-		list.add("Ammo: orang");
+		list.add("Ammo: §6orang");
 		list.add("Damage: aaaaaaaaa");
 		list.add("");
-		list.add("[LEGENDARY WEAPON]");
+		list.add(I18nUtil.resolveKey("trait.legendaryweap"));
 	}
 	
 	@Override

@@ -13,6 +13,7 @@ import com.hbm.tileentity.conductor.TileEntityFFFluidDuctMk2;
 import com.hbm.tileentity.conductor.TileEntityFFFluidSuccMk2;
 
 import api.hbm.block.IToolable;
+import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
@@ -63,7 +64,7 @@ public class BlockFluidPipeMk2 extends BlockContainer implements IToolable, ILoo
 	
 	@Override
 	public void addInformation(ItemStack stack, World player, List<String> tooltip, ITooltipFlag advanced) {
-		tooltip.add("Right click with screwdriver to toggle extraction");
+		tooltip.add(I18nUtil.resolveKey("desc.extraction"));
 	}
 	
 	@Override
@@ -144,6 +145,11 @@ public class BlockFluidPipeMk2 extends BlockContainer implements IToolable, ILoo
 	}
 
 	@Override
+	public boolean isFullBlock(IBlockState state) {
+		return false;
+	}
+
+	@Override
 	public boolean isFullCube(IBlockState state) {
 		return false;
 	}
@@ -166,6 +172,11 @@ public class BlockFluidPipeMk2 extends BlockContainer implements IToolable, ILoo
 	@Override
 	public boolean isOpaqueCube(IBlockState state) {
 		return false;
+	}
+
+	@Override
+	public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, IBlockState state, BlockPos pos, EnumFacing face){
+		return BlockFaceShape.CENTER;
 	}
 	
 	@Override
@@ -231,7 +242,7 @@ public class BlockFluidPipeMk2 extends BlockContainer implements IToolable, ILoo
 		
 		List<String> text = new ArrayList();
 		if(ductFluid == null){
-			text.add("§7None");
+			text.add("§7" + I18nUtil.resolveKey("desc.none"));
 		} else{
 			int color = ModForgeFluids.getFluidColor(ductFluid);
 			text.add("&[" + color + "&]" +I18nUtil.resolveKey(ductFluid.getUnlocalizedName()));

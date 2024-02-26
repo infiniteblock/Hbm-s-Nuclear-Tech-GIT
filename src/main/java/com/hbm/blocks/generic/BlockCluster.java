@@ -7,8 +7,7 @@ import com.hbm.items.ModItems;
 
 import api.hbm.block.IDrillInteraction;
 import api.hbm.block.IMiningDrill;
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
+import net.minecraft.block.BlockOre;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -20,13 +19,13 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 
-public class BlockCluster extends Block implements IDrillInteraction {
+public class BlockCluster extends BlockOre implements IDrillInteraction {
 
-	public BlockCluster(Material mat, String s) {
-		super(mat);
+	public BlockCluster(String s) {
+		super();
 		this.setUnlocalizedName(s);
 		this.setRegistryName(s);
-		this.setHarvestLevel("pickaxe", 3);
+		this.setHarvestLevel("pickaxe", 1);
 		
 		ModBlocks.ALL_BLOCKS.add(this);
 	}
@@ -68,6 +67,8 @@ public class BlockCluster extends Block implements IDrillInteraction {
 			return ModItems.crystal_titanium;
 		if(this == ModBlocks.cluster_aluminium)
 			return ModItems.crystal_aluminium;
+		if(this == ModBlocks.cluster_copper)
+			return ModItems.crystal_copper;
 		if(this == ModBlocks.basalt_gem)
 			return ModItems.gem_volcanic;
 		

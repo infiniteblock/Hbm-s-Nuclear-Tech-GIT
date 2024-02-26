@@ -33,10 +33,20 @@ public class ArmorFSBPowered extends ArmorFSB implements IBatteryItem {
 		this.setMaxDamage(1);
 	}
 
+	public static String getColor(long a, long b){
+		float fraction = 100F * a/b;
+		if(fraction > 75)
+			return "§a";
+		if(fraction > 25)
+			return "§e";
+		return "§c";
+	}
+
     @Override
     @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack stack, World worldIn, List<String> list, ITooltipFlag flagIn) {
-    	list.add("Charge: " + Library.getShortNumber(getCharge(stack)) + " / " + Library.getShortNumber(maxPower));
+    	long power = getCharge(stack);
+    	list.add("Charge: " + getColor(power, maxPower) + Library.getShortNumber(power) + " §2/ " + Library.getShortNumber(maxPower));
     	super.addInformation(stack, worldIn, list, flagIn);
     }
 
@@ -92,14 +102,14 @@ public class ArmorFSBPowered extends ArmorFSB implements IBatteryItem {
     }
 
 	@Override
-	public void onArmorTick(World world, EntityPlayer entity, ItemStack itemStack) {
-    	if(this.drain > 0 && ArmorFSB.hasFSBArmor(entity)) {
+	public void onArmorTick(World world, EntityPlayer player, ItemStack stack) {
+    	if(this.drain > 0 && ArmorFSB.hasFSBArmor(player)) {
     		long netto_drain = drain;
-    		ItemSelfcharger sc_battery = this.getHeldSCBattery(entity);
+    		ItemSelfcharger sc_battery = this.getHeldSCBattery(player);
     		if(sc_battery != null){
     			netto_drain = netto_drain - (sc_battery.getDischargeRate()/4L);
     		}
-    		this.dischargeBattery(itemStack, netto_drain);
+    		this.dischargeBattery(stack, netto_drain);
     	}
     }
 	

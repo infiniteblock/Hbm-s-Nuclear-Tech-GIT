@@ -5,6 +5,7 @@ import com.hbm.blocks.bomb.BlockTaint;
 import com.hbm.capability.HbmLivingCapability;
 import com.hbm.config.GeneralConfig;
 import com.hbm.config.PotionConfig;
+import com.hbm.config.CompatibilityConfig;
 import com.hbm.entity.mob.EntityTaintedCreeper;
 import com.hbm.explosion.ExplosionLarge;
 import com.hbm.lib.HBMSoundHandler;
@@ -54,7 +55,7 @@ public class HbmPotion extends Potion {
 		bang = registerPotion(true, 1118481, "potion.hbm_bang", 3, 0);
 		mutation = registerPotion(false, 0xFF8132, "potion.hbm_mutation", 2, 0);
 		radx = registerPotion(false, 0x225900, "potion.hbm_radx", 5, 0);
-		lead = registerPotion(false, 0x767682, "potion.hbm_lead", 6, 0);
+		lead = registerPotion(true, 0x767682, "potion.hbm_lead", 6, 0);
 		radaway = registerPotion(false, 0xFFE400, "potion.hbm_radaway", 7, 0);
 		telekinesis = registerPotion(true, 0x00F3FF, "potion.hbm_telekinesis", 0, 1);
 		phosphorus = registerPotion(true, 0xFF3A00, "potion.hbm_phosphorus", 1, 1);
@@ -84,7 +85,7 @@ public class HbmPotion extends Potion {
 			if(!(entity instanceof EntityTaintedCreeper) && entity.world.rand.nextInt(80) == 0)
 				entity.attackEntityFrom(ModDamageSource.taint, (level + 1));
 			
-			if(GeneralConfig.enableHardcoreTaint && !entity.world.isRemote) {
+			if(GeneralConfig.enableHardcoreTaint && !entity.world.isRemote && CompatibilityConfig.isWarDim(entity.world)) {
 				
 				int x = (int)(entity.posX - 1);
 				int y = (int)entity.posY;
@@ -107,12 +108,14 @@ public class HbmPotion extends Potion {
 				entity.getCapability(HbmLivingCapability.EntityHbmPropsProvider.ENT_HBM_PROPS_CAP, null).decreaseRads((level+1)*0.05F);
 		}
 		if(this == bang) {
-			
-			entity.attackEntityFrom(ModDamageSource.bang, 1000*(level+1));
+			if(CompatibilityConfig.isWarDim(entity.world)){
+				entity.attackEntityFrom(ModDamageSource.bang, 10000*(level+1));
 
-			if (!(entity instanceof EntityPlayer))
-				entity.setDead();
-
+				if (!(entity instanceof EntityPlayer)){
+					entity.onDeath(ModDamageSource.bang);
+					entity.setHealth(0);
+				}
+			}
 			entity.world.playSound(null, new BlockPos(entity), HBMSoundHandler.laserBang, SoundCategory.AMBIENT, 100.0F, 1.0F);
 			ExplosionLarge.spawnParticles(entity.world, entity.posX, entity.posY, entity.posZ, 10);
 		}
@@ -130,7 +133,7 @@ public class HbmPotion extends Potion {
 				entity.motionZ = entity.motionZ+(entity.getRNG().nextFloat()-0.5)*(level+1)*0.5;
 			}
 		}
-		if(this == phosphorus && !entity.world.isRemote) {
+		if(this == phosphorus && !entity.world.isRemote && CompatibilityConfig.isWarDim(entity.world)) {
 			
 			entity.setFire(level+1);
 		}
@@ -165,5 +168,4 @@ public class HbmPotion extends Potion {
 		
 		return false;
 	}
-	
 }

@@ -9,6 +9,7 @@ import com.hbm.items.ModItems;
 import com.hbm.lib.HBMSoundHandler;
 import com.hbm.lib.Library;
 
+import com.hbm.util.I18nUtil;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityLivingBase;
@@ -93,10 +94,10 @@ public class GunMP extends Item {
 		list.add("whose blood is that? The former");
 		list.add("user's? The victim's? Both?");
 		list.add("");
-		list.add("Ammo: Small Propellantless Machine Gun Round");
+		list.add("Ammo: §eSmall Propellantless Machine Gun Round");
 		list.add("Damage: 100 - 150");
 		list.add("");
-		list.add("[LEGENDARY WEAPON]");
+		list.add(I18nUtil.resolveKey("trait.legendaryweap"));
 	}
 	
 	@Override

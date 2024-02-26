@@ -159,14 +159,14 @@ public class ItemRTGPellet extends ItemHazard {
 		if (instance.getDoesDecay()) {
 			list.add("§aFuel left: "+((int)(instance.getDecay(instance, stack) * 100000000D))/1000000D + "%§r");
 			list.add(I18nUtil.resolveKey("desc.item.rtgDecay", new ItemStack(instance.getDecayItem()).getDisplayName()));
-			list.add("EXTENDED INFO:");
+			list.add("");
 			list.add(String.format("%s / %s ticks", instance.getLifespan(stack), instance.getMaxLifespan()));
 			final String[] halfLife = BobMathUtil.ticksToDate(instance.getHalfLife());
 			final String[] timeLeft = BobMathUtil.ticksToDate(instance.getLifespan(stack));
 			final String[] maxLife = BobMathUtil.ticksToDate(instance.getMaxLifespan());
-			list.add(String.format("§aHalf life:      %sy %sd %sh %sm§r", (Object[]) halfLife));
-			list.add(String.format("Time remaining: %sy %sd %sh %sm", (Object[]) timeLeft));
-			list.add(String.format("Decay Time:     %sy %sd %sh %sm", (Object[]) maxLife));
+			list.add(String.format("§aHalf life:      %sy %sd %sh %sm %ss§r", (Object[]) halfLife));
+			list.add(String.format("Time remaining: %sy %sd %sh %sm %ss", (Object[]) timeLeft));
+			list.add(String.format("Decay Time:     %sy %sd %sh %sm %ss", (Object[]) maxLife));
 		}
 	}
 

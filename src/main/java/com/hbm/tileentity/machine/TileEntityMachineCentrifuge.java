@@ -72,7 +72,7 @@ public class TileEntityMachineCentrifuge extends TileEntityMachineBase implement
 	
 	@Override
 	public int[] getAccessibleSlotsFromSide(EnumFacing e) {
-		return new int[]{ 0, 1, 2, 3, 4, 5};
+		return new int[]{ 0, 1, 2, 3, 4, 5, 6, 7};
 	}
 	
 	@Override
@@ -198,8 +198,10 @@ public class TileEntityMachineCentrifuge extends TileEntityMachineBase implement
 				level += 2;
 			if(inventory.getStackInSlot(i).getItem() == ModItems.upgrade_speed_3)
 				level +=3;
+			if(inventory.getStackInSlot(i).getItem() == ModItems.upgrade_screm)
+				level +=6;
 		}
-		return Math.min(level, 3);
+		return Math.min(level, 6);
 	}
 
 	public int getPowerLvl() {
@@ -236,6 +238,10 @@ public class TileEntityMachineCentrifuge extends TileEntityMachineBase implement
 		if(!world.isRemote) {
 			
 			this.updateStandardConnections(world, pos);
+
+			if(inventory.getSlots() < 7){
+				inventory = this.getNewInventory(8, 64);
+			}
 
 			power = Library.chargeTEFromItems(inventory, 1, power, maxPower);
 

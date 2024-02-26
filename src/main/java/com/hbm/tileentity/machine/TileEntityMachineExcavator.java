@@ -31,6 +31,8 @@ import com.hbm.util.InventoryUtil;
 import com.hbm.util.ItemStackUtil;
 
 import api.hbm.energy.IEnergyUser;
+import api.hbm.block.IDrillInteraction;
+import api.hbm.block.IMiningDrill;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.gui.GuiScreen;
@@ -64,7 +66,7 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
-public class TileEntityMachineExcavator extends TileEntityMachineBase implements IEnergyUser, IFluidHandler, ITickable, ITankPacketAcceptor, IControlReceiver, IGUIProvider {
+public class TileEntityMachineExcavator extends TileEntityMachineBase implements IEnergyUser, IFluidHandler, ITickable, ITankPacketAcceptor, IControlReceiver, IGUIProvider, IMiningDrill {
 
 	public static final long maxPower = 10_000_000;
 	public long power;
@@ -92,6 +94,7 @@ public class TileEntityMachineExcavator extends TileEntityMachineBase implements
 	public double speed = 1.0D;
 	public final long baseConsumption = 10_000L;
 	public long consumption = baseConsumption;
+	protected int drillRating = 0;
 	
 	public FluidTank tank;
 	public Fluid fluidType;
@@ -148,6 +151,7 @@ public class TileEntityMachineExcavator extends TileEntityMachineBase implements
 			EnumDrillType type = this.getInstalledDrill();
 			if(this.enableDrill && type != null && hasEnoughPower()) {
 				
+				this.drillRating = (int)(type.speed * 80);
 				operational = true;
 				if(bedrockDrilling)
 					this.power -= this.getPowerConsumption() * 10;
@@ -168,6 +172,7 @@ public class TileEntityMachineExcavator extends TileEntityMachineBase implements
 				}
 			} else {
 				this.targetDepth = 0;
+				this.drillRating = 0;
 			}
 			
 			NBTTagCompound data = new NBTTagCompound();
@@ -277,7 +282,7 @@ public class TileEntityMachineExcavator extends TileEntityMachineBase implements
 		if(targetDepth == 0 || y == 0) {
 			radius = 1;
 		}
-		
+		int installedTier = this.getInstalledDrill().tier;
 		for(int ring = 1; ring <= radius; ring++) {
 			
 			boolean ignoreAll = true;
@@ -297,7 +302,8 @@ public class TileEntityMachineExcavator extends TileEntityMachineBase implements
 						Block b = bState.getBlock();
 						
 						if(b == ModBlocks.ore_bedrock_block) {
-							combinedHardness = 2 * 60 * 20;
+							double tierDiff = ((TileEntityBedrockOre)world.getTileEntity(drillPos)).tier / (double)installedTier;
+							combinedHardness = (int)(2 * 60 * 20 * tierDiff);
 							bedrockOre = new BlockPos(x, y, z);
 							bedrockDrilling = true;
 							enableCrusher = false;
@@ -448,6 +454,17 @@ public class TileEntityMachineExcavator extends TileEntityMachineBase implements
 			world.setBlockState(drillPos, ModBlocks.barricade.getDefaultState());
 		}
 	}
+
+	@Override
+	public DrillType getDrillTier(){
+		return DrillType.INDUSTRIAL;
+	}
+
+	@Override
+	public int getDrillRating(){
+		return this.drillRating;
+	}
+
 	protected void breakSingleBlock(IBlockState bState, BlockPos drillPos) {
 		Block b = bState.getBlock();
 		NonNullList<ItemStack> items = NonNullList.create();
@@ -463,6 +480,16 @@ public class TileEntityMachineExcavator extends TileEntityMachineBase implements
 				if(result != null && !result.isEmpty()) {
 					items.clear();
 					items.add(result.copy());
+				}
+			} else if(b instanceof IDrillInteraction) {
+				IDrillInteraction in = (IDrillInteraction) b;
+				if(in.canBreak(world, drillPos.getX(), drillPos.getY(), drillPos.getZ(), bState, this)){
+					ItemStack drop = in.extractResource(world, drillPos.getX(), drillPos.getY(), drillPos.getZ(), bState, this);
+					
+					if(drop != null) {
+						items.clear();
+						items.add(drop.copy());
+					}
 				}
 			}
 			
@@ -559,17 +586,51 @@ public class TileEntityMachineExcavator extends TileEntityMachineBase implements
 		if(te == null || !te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, dir.toEnumFacing()))
 			return;
 		IItemHandler h = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, dir.toEnumFacing());
-		if(!(h instanceof IItemHandlerModifiable))
-			return;
-		
-		IItemHandlerModifiable inv = (IItemHandlerModifiable)h;
 		for(int i = 5; i < 14; i++) {
 			if(!inventory.getStackInSlot(i).isEmpty() || inventory.getStackInSlot(i).getCount() <= 0) {
-				int prev = inventory.getStackInSlot(i).getCount();
-				inventory.setStackInSlot(i, InventoryUtil.tryAddItemToInventory(inv, 0, inv.getSlots() - 1, inventory.getStackInSlot(i)));
+				tryFillContainerCap(h, i);
 			}
 		}
 	}
+
+	//Unloads output into chests. Capability version.
+    public boolean tryFillContainerCap(IItemHandler chest, int slot) {
+        //Check if we have something to output
+        if(inventory.getStackInSlot(slot).isEmpty())
+            return false;
+
+        return tryInsertItemCap(chest, inventory.getStackInSlot(slot));
+    }
+
+	//Unloads output into chests. Capability version.
+    public boolean tryInsertItemCap(IItemHandler chest, ItemStack stack) {
+        //Check if we have something to output
+        if(stack.isEmpty())
+            return false;
+
+        for(int i = 0; i < chest.getSlots(); i++) {
+            
+            ItemStack outputStack = stack.copy();
+            if(outputStack.isEmpty())
+                return false;
+
+            ItemStack chestItem = chest.getStackInSlot(i).copy();
+            if(chestItem.isEmpty() || (Library.areItemStacksCompatible(outputStack, chestItem, false) && chestItem.getCount() < chestItem.getMaxStackSize())) {
+                int fillAmount = Math.min(chestItem.getMaxStackSize()-chestItem.getCount(), outputStack.getCount());
+                
+                outputStack.setCount(fillAmount);
+
+                ItemStack rest = chest.insertItem(i, outputStack, true);
+                if(rest.getItem() == Item.getItemFromBlock(Blocks.AIR)){
+                    stack.shrink(outputStack.getCount());
+                    chest.insertItem(i, outputStack, false);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 	
 	/* pulls up an AABB around the drillbit and tries to either conveyor output or buffer collected items */
 	protected void tryCollect(int radius) {

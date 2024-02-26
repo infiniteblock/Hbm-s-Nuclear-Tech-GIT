@@ -45,7 +45,6 @@ import net.minecraftforge.fluids.capability.IFluidTankProperties;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.items.CapabilityItemHandler;
 
 
 public class TileEntityMachineGasFlare extends TileEntityMachineBase implements ITickable, IEnergyGenerator, IFluidHandler, ITankPacketAcceptor, IGUIProvider, IControlReceiver {
@@ -55,7 +54,7 @@ public class TileEntityMachineGasFlare extends TileEntityMachineBase implements 
 	public FluidTank tank;
 	public boolean isOn = false;
 	public boolean doesBurn = false;
-	public int cacheEnergy;
+	public int cacheEnergy = 0;
 	public boolean needsUpdate;
 
 	private final UpgradeManager upgradeManager = new UpgradeManager();
@@ -131,15 +130,19 @@ public class TileEntityMachineGasFlare extends TileEntityMachineBase implements 
 				if(FFUtils.fillFromFluidContainer(inventory, tank, 1, 2))
 					needsUpdate = true;
 
+			int maxVent = 50;
 			int maxBurn = 10;
 
 			if(isOn && tank.getFluidAmount() >= 10) {
 				upgradeManager.eval(inventory, 4, 5);
 
-				int burn = Math.min(upgradeManager.getLevel(UpgradeType.SPEED), 3);
-				int yield = Math.min(upgradeManager.getLevel(UpgradeType.EFFECT), 3);
+				int burn = Math.min(upgradeManager.getLevel(UpgradeType.SPEED), 6);
+				int yield = Math.min(upgradeManager.getLevel(UpgradeType.EFFECT), 6);
 
+				maxVent += maxVent * burn;
 				maxBurn += maxBurn * burn;
+
+				cacheEnergy = FluidCombustionRecipes.getFlameEnergy(tankType);
 
 				if (doesBurn && cacheEnergy != 0) {
 					int eject = Math.min(maxBurn, tank.getFluidAmount());
@@ -159,6 +162,9 @@ public class TileEntityMachineGasFlare extends TileEntityMachineBase implements 
 
 					if(this.world.getTotalWorldTime() % 5 == 0)
 						this.world.playSound(null, pos.getX(), pos.getY() + 11, pos.getZ(), HBMSoundHandler.flamethrowerShoot, SoundCategory.BLOCKS, 1.5F, 1F);
+				} else {
+					tank.drain(maxVent, true);
+					needsUpdate = true;
 				}
 			}
 			
@@ -185,7 +191,16 @@ public class TileEntityMachineGasFlare extends TileEntityMachineBase implements 
 		this.tankType = FluidRegistry.getFluid(nbt.getString("tankType"));
 	}
 
+	@Override
+	public int[] getAccessibleSlotsFromSide(EnumFacing e) {
+		return new int[] {0, 1, 2, 3, 4, 5};
+	}
+
 	void setupTanks() {
+		if(inventory.getSlots() < 5){
+			inventory = this.getNewInventory(6, 64);
+		}
+
 		ItemStack slotId = inventory.getStackInSlot(3);
 		Item itemId = slotId.getItem();
 		if (itemId == ModItems.forge_fluid_identifier) {
@@ -262,9 +277,7 @@ public class TileEntityMachineGasFlare extends TileEntityMachineBase implements 
 	
 	@Override
 	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
-		if(capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY){
-			return true;
-		} else if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY){
+		if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY){
 			return true;
 		} else {
 			return super.hasCapability(capability, facing);
@@ -273,9 +286,7 @@ public class TileEntityMachineGasFlare extends TileEntityMachineBase implements 
 	
 	@Override
 	public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
-		if(capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY){
-			return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(inventory);
-		} else if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY){
+		if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY){
 			return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(this);
 		} else {
 			return super.getCapability(capability, facing);

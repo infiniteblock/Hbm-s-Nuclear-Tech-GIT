@@ -18,9 +18,7 @@ public interface ITooltipProvider {
 		if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
 			for(String s : I18nUtil.resolveKeyArray(((Block)this).getUnlocalizedName() + ".desc")) list.add(TextFormatting.YELLOW + s);
 		} else {
-			list.add(TextFormatting.DARK_GRAY + "" + TextFormatting.ITALIC +"Hold <" +
-					TextFormatting.YELLOW + "" + TextFormatting.ITALIC + "LSHIFT" +
-					TextFormatting.DARK_GRAY + "" + TextFormatting.ITALIC + "> to display more info");
+			list.add(I18nUtil.resolveKey("desc.tooltip.hold", "LSHIFT"));
 		}
 	}
 }

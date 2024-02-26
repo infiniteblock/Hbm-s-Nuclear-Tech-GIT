@@ -16,6 +16,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.glu.Project;
 
+import baubles.api.BaublesApi;
+
 import com.google.common.collect.Queues;
 import com.hbm.blocks.ILookOverlay;
 import com.hbm.blocks.ModBlocks;
@@ -56,7 +58,6 @@ import com.hbm.items.gear.RedstoneSword;
 import com.hbm.items.machine.ItemAssemblyTemplate;
 import com.hbm.items.machine.ItemCassette.TrackType;
 import com.hbm.items.machine.ItemChemistryTemplate;
-import com.hbm.inventory.ChemplantRecipes.EnumChemistryTemplate;
 import com.hbm.items.machine.ItemFluidTank;
 import com.hbm.items.machine.ItemForgeFluidIdentifier;
 import com.hbm.items.machine.ItemRBMKPellet;
@@ -109,11 +110,8 @@ import com.hbm.render.item.FluidTankBakedModel;
 import com.hbm.render.item.FluidTankRender;
 import com.hbm.render.item.ItemRenderBase;
 import com.hbm.render.item.ItemRenderLibrary;
-import com.hbm.render.item.ItemRendererBedrockOre;
 import com.hbm.render.item.TEISRBase;
 import com.hbm.render.item.weapon.B92BakedModel;
-import com.hbm.render.item.weapon.GunRevolverBakedModel;
-import com.hbm.render.item.weapon.GunRevolverRender;
 import com.hbm.render.item.weapon.ItemRedstoneSwordRender;
 import com.hbm.render.item.weapon.ItemRenderGunAnim;
 import com.hbm.render.item.weapon.ItemRenderGunEgon;
@@ -135,10 +133,12 @@ import com.hbm.sound.MovingSoundCrashing;
 import com.hbm.sound.MovingSoundPlayerLoop;
 import com.hbm.sound.MovingSoundPlayerLoop.EnumHbmSound;
 import com.hbm.sound.MovingSoundXVL1456;
+import com.hbm.sound.MovingSoundRadarLoop;
 import com.hbm.tileentity.bomb.TileEntityNukeCustom;
 import com.hbm.tileentity.bomb.TileEntityNukeCustom.CustomNukeEntry;
 import com.hbm.tileentity.bomb.TileEntityNukeCustom.EnumEntryType;
 import com.hbm.tileentity.machine.rbmk.TileEntityRBMKBase;
+import com.hbm.inventory.ChemplantRecipes;
 import com.hbm.util.ArmorRegistry;
 import com.hbm.util.ArmorRegistry.HazardClass;
 import com.hbm.util.ContaminationUtil;
@@ -287,7 +287,7 @@ public class ModEventHandlerClient {
 	}
 
 	public static void registerBedrockOreModels(){
-		ResourceLocation[] list = new ResourceLocation[150];
+		ResourceLocation[] list = new ResourceLocation[300];
 		for(int i = 0; i < list.length; i++) {
 			ModelLoader.setCustomModelResourceLocation(ModItems.ore_bedrock, i, new ModelResourceLocation(ModItems.ore_bedrock.getRegistryName(), "inventory"));
 			ModelLoader.setCustomModelResourceLocation(ModItems.ore_bedrock_centrifuged, i, new ModelResourceLocation(ModItems.ore_bedrock_centrifuged.getRegistryName(), "inventory"));
@@ -313,15 +313,19 @@ public class ModEventHandlerClient {
 			return;
 
 		//Drillgon200: I hate myself for making this
+		if(item == ModItems.chemistry_template){
+			ChemplantRecipes.registerRecipes();
+		}
+
 		if(item == ModItems.chemistry_icon) {
-			for(int i = 0; i < EnumChemistryTemplate.values().length; i++) {
-				ModelLoader.setCustomModelResourceLocation(item, i, new ModelResourceLocation(RefStrings.MODID + ":chem_icon_" + EnumChemistryTemplate.getEnum(i).getName().toLowerCase(), "inventory"));
+			for(int i: ChemplantRecipes.recipeNames.keySet()){
+				ModelLoader.setCustomModelResourceLocation(item, i, new ModelResourceLocation(RefStrings.MODID + ":chem_icon_" + ChemplantRecipes.getName(i).toLowerCase(), "inventory"));
 			}
 		} else if(item == ModItems.chemistry_template) {
-			for(int i = 0; i < EnumChemistryTemplate.values().length; i++) {
+			for(int i: ChemplantRecipes.recipeNames.keySet()){
 				ModelLoader.setCustomModelResourceLocation(item, i, new ModelResourceLocation(item.getRegistryName(), "inventory"));
 			}
-		} else 	if(item == ModItems.siren_track) {
+		} else if(item == ModItems.siren_track) {
 			for(int i = 0; i < TrackType.values().length; i++) {
 				ModelLoader.setCustomModelResourceLocation(item, i, new ModelResourceLocation(item.getRegistryName(), "inventory"));
 			}
@@ -489,7 +493,7 @@ public class ModEventHandlerClient {
 		swapModelsNoGui(ModItems.gun_immolator, reg);
 		swapModelsNoGui(ModItems.gun_osipr, reg);
 		swapModelsNoGui(ModItems.gun_emp, reg);
-		swapModelsNoGui(ModItems.gun_revolver_inverted, reg);
+		swapModels(ModItems.gun_revolver_inverted, reg);
 		swapModelsNoGui(ModItems.gun_lever_action_sonata, reg);
 		swapModelsNoGui(ModItems.gun_bolt_action_saturnite, reg);
 		swapModelsNoGui(ModItems.gun_folly, reg);
@@ -1089,7 +1093,7 @@ public class ModEventHandlerClient {
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void setNTMSkybox(ClientTickEvent event){
-		if(event.phase == Phase.START) {
+		if(event.phase == Phase.START && GeneralConfig.enableSkybox) {
 			
 			World world = Minecraft.getMinecraft().world;
 			
@@ -1300,20 +1304,7 @@ public class ModEventHandlerClient {
 
 			Tessellator.instance.draw();
 			GL11.glPopMatrix();
-		}/* else {
-			//Drillgon200: Used for testing the closetPointonBB method
-			AxisAlignedBB bb = new AxisAlignedBB(RenderPress.pos.x, RenderPress.pos.y, RenderPress.pos.z, RenderPress.pos.x+1, RenderPress.pos.y+1, RenderPress.pos.z+1);
-			Vec3d pos = Library.closestPointOnBB(bb, new Vec3d(0, entity.getEyeHeight(), 0), entity.getLookVec().scale(20).addVector(0, entity.getEyeHeight(), 0));
-			GL11.glPushMatrix();
-			GlStateManager.translate(pos.x, pos.y, pos.z);
-			RenderHelper.bindTexture(ResourceManager.universal);
-			Tessellator.instance.startDrawing(GL11.GL_TRIANGLES);
-			ResourceManager.n45_chain.tessellateAll(Tessellator.instance);
-			Tessellator.instance.draw();
-			GL11.glPopMatrix();
-		}*/
-		
-		
+		}		
 		
 		int dist = 300;
 		int x = 0;
@@ -1491,7 +1482,7 @@ public class ModEventHandlerClient {
 			//GLUON GUN//
 			if(player.getHeldItemMainhand().getItem() == ModItems.gun_egon && ItemGunEgon.activeTicks > 0 && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
 				GL11.glPushMatrix();
-				float[] angles = ItemGunEgon.getBeamDirectionOffset(player.world.getWorldTime()+partialTicks);
+				float[] angles = ItemGunEgon.getBeamDirectionOffset(player.world.getTotalWorldTime()+partialTicks);
 				Vec3d look = Library.changeByAngle(player.getLook(partialTicks), angles[0], angles[1]);
 				RayTraceResult r = Library.rayTraceIncludeEntitiesCustomDirection(player, look, 50, partialTicks);
 				Vec3d pos = player.getPositionEyes(partialTicks);
@@ -1500,7 +1491,7 @@ public class ModEventHandlerClient {
 				} else {
 					hitPos = r.hitVec.add(look.scale(-0.1));
 				}
-				float[] offset = ItemRenderGunEgon.getOffset(player.world.getWorldTime()+partialTicks);
+				float[] offset = ItemRenderGunEgon.getOffset(player.world.getTotalWorldTime()+partialTicks);
 				//I'll at least attempt to make it look consistent at different fovs
 				float fovDiff = (currentFOV-70)*0.0002F;
 				Vec3d start = new Vec3d(-0.18+offset[0]*0.075F-fovDiff, -0.2+offset[1]*0.1F, 0.35-fovDiff*30);
@@ -1548,7 +1539,7 @@ public class ModEventHandlerClient {
 				ItemGunEgon.activeTrailParticles.remove(player);
 				continue;
 			}
-			float[] angles = ItemGunEgon.getBeamDirectionOffset(player.world.getWorldTime()+partialTicks);
+			float[] angles = ItemGunEgon.getBeamDirectionOffset(player.world.getTotalWorldTime()+partialTicks);
 			Vec3d look = Library.changeByAngle(player.getLook(partialTicks), angles[0], angles[1]);
 			RayTraceResult r = Library.rayTraceIncludeEntitiesCustomDirection(player, look, 50, partialTicks);
 			if(r != null && r.hitVec != null && r.typeOfHit == Type.BLOCK){
@@ -1644,6 +1635,16 @@ public class ModEventHandlerClient {
 		}
 	}
 
+	public boolean hasBauble(EntityPlayer player, Item bauble){
+		try{
+			if(BaublesApi.isBaubleEquipped(player, bauble) != -1){
+				return true;
+			}
+		} catch(Throwable t){
+		}
+		return false;
+	}
+
 	@SubscribeEvent
 	public void onOverlayRender(RenderGameOverlayEvent.Pre event) {
 		EntityPlayer player = Minecraft.getMinecraft().player;
@@ -1672,14 +1673,14 @@ public class ModEventHandlerClient {
 		/// HANDLE GEIGER COUNTER AND JETPACK HUD ///
 		if(event.getType() == ElementType.HOTBAR) {
 			if(!(ArmorFSB.hasFSBArmorHelmet(player) && ((ArmorFSB)player.inventory.armorInventory.get(3).getItem()).customGeiger)) {
-				if(Library.hasInventoryItem(player.inventory, ModItems.geiger_counter)) {
+				if(Library.hasInventoryItem(player.inventory, ModItems.geiger_counter) || hasBauble(player, ModItems.geiger_counter)) {
 	
 					float rads = (float)Library.getEntRadCap(player).getRads();
 	
 					RenderScreenOverlay.renderRadCounter(event.getResolution(), rads, Minecraft.getMinecraft().ingameGUI);
 				}
 			}
-			if(Library.hasInventoryItem(player.inventory, ModItems.digamma_diagnostic)) {
+			if(Library.hasInventoryItem(player.inventory, ModItems.digamma_diagnostic) || hasBauble(player, ModItems.digamma_diagnostic)) {
 	
 				float digamma = (float)Library.getEntRadCap(player).getDigamma();
 
@@ -1808,7 +1809,7 @@ public class ModEventHandlerClient {
 		if(player.getHeldItemMainhand().getItem() == ModItems.gun_egon && firing){
 			GL11.glPushMatrix();
 			float partialTicks = event.getPartialRenderTick();
-			float[] angles = ItemGunEgon.getBeamDirectionOffset(player.world.getWorldTime()+partialTicks);
+			float[] angles = ItemGunEgon.getBeamDirectionOffset(player.world.getTotalWorldTime()+partialTicks);
 			Vec3d look = Library.changeByAngle(player.getLook(partialTicks), angles[0], angles[1]);
 			RayTraceResult r = Library.rayTraceIncludeEntitiesCustomDirection(player, look, 50, event.getPartialRenderTick());
 			Vec3d pos = player.getPositionEyes(event.getPartialRenderTick());
@@ -1885,7 +1886,7 @@ public class ModEventHandlerClient {
 		// Conglaturations.
 		// Fuck you.
 
-		if(r.toString().equals("hbm:misc.nullTau") && Library.getClosestPlayerForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2) != null) {
+		if(r.toString().equals("hbm:misc.nulltau") && Library.getClosestPlayerForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2) != null) {
 			EntityPlayer ent = Library.getClosestPlayerForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2);
 
 			if(MovingSoundPlayerLoop.getSoundByPlayer(ent, EnumHbmSound.soundTauLoop) == null) {
@@ -1896,8 +1897,15 @@ public class ModEventHandlerClient {
 					MovingSoundPlayerLoop.getSoundByPlayer(ent, EnumHbmSound.soundTauLoop).setPitch(MovingSoundPlayerLoop.getSoundByPlayer(ent, EnumHbmSound.soundTauLoop).getPitch() + 0.01F);
 			}
 		}
+		if(r.toString().equals("hbm:misc.nullradar") && Library.getClosestPlayerForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2) != null) {
+			EntityPlayer ent = Library.getClosestPlayerForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2);
+			if(MovingSoundPlayerLoop.getSoundByPlayer(ent, EnumHbmSound.soundRadarLoop) == null) {
+				MovingSoundPlayerLoop.globalSoundList.add(new MovingSoundRadarLoop(HBMSoundHandler.alarmAirRaid, SoundCategory.PLAYERS, ent, EnumHbmSound.soundRadarLoop));
+				MovingSoundPlayerLoop.getSoundByPlayer(ent, EnumHbmSound.soundRadarLoop).setVolume(1.0F);
+			}
+		}
 
-		if(r.toString().equals("hbm:misc.nullChopper") && Library.getClosestChopperForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2) != null) {
+		if(r.toString().equals("hbm:misc.nullchopper") && Library.getClosestChopperForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2) != null) {
 			EntityHunterChopper ent = Library.getClosestChopperForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2);
 
 			if(MovingSoundPlayerLoop.getSoundByPlayer(ent, EnumHbmSound.soundChopperLoop) == null) {
@@ -1906,7 +1914,7 @@ public class ModEventHandlerClient {
 			}
 		}
 
-		if(r.toString().equals("hbm:misc.nullCrashing") && Library.getClosestChopperForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2) != null) {
+		if(r.toString().equals("hbm:misc.nullcrashing") && Library.getClosestChopperForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2) != null) {
 			EntityHunterChopper ent = Library.getClosestChopperForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2);
 
 			if(MovingSoundPlayerLoop.getSoundByPlayer(ent, EnumHbmSound.soundCrashingLoop) == null) {
@@ -1915,7 +1923,7 @@ public class ModEventHandlerClient {
 			}
 		}
 
-		if(r.toString().equals("hbm:misc.nullMine") && Library.getClosestMineForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2) != null) {
+		if(r.toString().equals("hbm:misc.nullmine") && Library.getClosestMineForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2) != null) {
 			EntityChopperMine ent = Library.getClosestMineForSound(wc, e.getSound().getXPosF(), e.getSound().getYPosF(), e.getSound().getZPosF(), 2);
 
 			if(MovingSoundPlayerLoop.getSoundByPlayer(ent, EnumHbmSound.soundMineLoop) == null) {
@@ -1992,9 +2000,7 @@ public class ModEventHandlerClient {
 				}
 			} else {
 				
-				list.add(TextFormatting.DARK_GRAY + "" + TextFormatting.ITALIC +"Hold <" +
-						TextFormatting.YELLOW + "" + TextFormatting.ITALIC + "LSHIFT" +
-						TextFormatting.DARK_GRAY + "" + TextFormatting.ITALIC + "> to display protection info");
+				list.add(I18nUtil.resolveKey("desc.tooltip.hold", "LSHIFT"));
 			}
 		}
 
@@ -2083,5 +2089,4 @@ public class ModEventHandlerClient {
 			GlStateManager.enableLighting();
 		}
 	}
-
 }

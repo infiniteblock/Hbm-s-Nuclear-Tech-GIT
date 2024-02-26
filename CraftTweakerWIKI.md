@@ -12,8 +12,25 @@ Removing of oreDict recipes is currently not supported.
 mods.ntm.Assembler.addRecipe(IItemStack output, IItemStack[] inputs, int duration);<br>
 ``mods.ntm.Assembler.addRecipe(<minecraft:beef>, [<minecraft:cooked_beef>*4, <minecraft:egg>*6], 30);``
 
+mods.ntm.Assembler.replaceRecipe(IItemStack output, IItemStack[] inputs, int duration);<br>
+``mods.ntm.Assembler.replaceRecipe(<hbm:machine_silex>, [<minecraft:glass>, <minecraft:cobblestone>], 50);``
+
 mods.ntm.Assembler.removeRecipe(IItemStack output);<br>
 ``mods.ntm.Assembler.removeRecipe(<hbm:machine_silex>);``
+
+
+## Chemplant
+
+> **duration** must be > 0
+
+mods.ntm.Chemplant.addChemplantRecipe(int index, String name, IItemStack[] inputItems, String[] inputFluids, int[] inputFluidAmounts, IItemStack[] outputItems, String[] outputFluids, int[] outputFluidAmounts, int duration);<br>
+``mods.ntm.Chemplant.addChemplantRecipe(371, "NTM_BEEF", null, ["coolant"], [500], [<minecraft:snowball>], ["water", "petroleum"], [1000, 2000], 50);``
+
+
+> **index** must be > 0 and is the item meta value
+
+mods.ntm.Chemplant.removeChemplantRecipe(int index);<br>
+``mods.ntm.Chemplant.removeChemplantRecipe(370);``
 
 
 ## Blast Furnace

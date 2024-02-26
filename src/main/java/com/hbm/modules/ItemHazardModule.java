@@ -124,18 +124,18 @@ public class ItemHazardModule {
 				EntityLivingBase livingCEntity = (EntityLivingBase) entity;
 				boolean isProtected = entity instanceof EntityPlayer && ArmorUtil.checkForHazmat((EntityPlayer)entity);
 				if(!isProtected){
-					livingCEntity.addPotionEffect(new PotionEffect(MobEffects.MINING_FATIGUE, 100, this.cryogenic-1));
-					livingCEntity.addPotionEffect(new PotionEffect(MobEffects.SLOWNESS, 100, Math.min(4, this.cryogenic-1)));
-					livingCEntity.addPotionEffect(new PotionEffect(MobEffects.WEAKNESS, 100, this.cryogenic-1));
+					livingCEntity.addPotionEffect(new PotionEffect(MobEffects.MINING_FATIGUE, 110, this.cryogenic-1));
+					livingCEntity.addPotionEffect(new PotionEffect(MobEffects.SLOWNESS, 110, Math.min(4, this.cryogenic-1)));
+					livingCEntity.addPotionEffect(new PotionEffect(MobEffects.WEAKNESS, 110, this.cryogenic-1));
 					if(this.cryogenic > 4){
-						livingCEntity.addPotionEffect(new PotionEffect(MobEffects.WITHER, 100, this.cryogenic-3));
+						livingCEntity.addPotionEffect(new PotionEffect(MobEffects.WITHER, 110, this.cryogenic-3));
 						entity.extinguish();
 					}
 				}
 			}
 		}
 
-		if(this.fire > 0 && !reacher && !ArmorUtil.checkForAsbestos((EntityPlayer)entity)){
+		if(this.fire > 0 && !reacher && (!(entity instanceof EntityPlayer) || (entity instanceof EntityPlayer && !ArmorUtil.checkForAsbestos((EntityPlayer)entity)))){
 			entity.setFire(this.fire);
 		}
 
@@ -146,32 +146,30 @@ public class ItemHazardModule {
 				boolean hasHazmat = false;
 				if(entity instanceof EntityPlayer){
 					if(ArmorRegistry.hasProtection(livingTEntity, EntityEquipmentSlot.HEAD, HazardClass.NERVE_AGENT)){
-						ArmorUtil.damageGasMaskFilter(livingTEntity, Math.max(1, this.toxic>>2));
+						ArmorUtil.damageGasMaskFilter(livingTEntity, 1);
 						hasToxFilter = true;
-					} else {
-						hasToxFilter = false;
 					}
 					hasHazmat = ArmorUtil.checkForHazmat((EntityPlayer)entity);
 				}
 
-				if(!hasToxFilter){
-					livingTEntity.addPotionEffect(new PotionEffect(MobEffects.WEAKNESS, 100, this.toxic-1));
+				if(!hasToxFilter && !hasHazmat){
+					livingTEntity.addPotionEffect(new PotionEffect(MobEffects.WEAKNESS, 110, this.toxic-1));
 					
 					if(this.toxic > 2)
-						livingTEntity.addPotionEffect(new PotionEffect(MobEffects.SLOWNESS, 100, Math.min(4, this.toxic-4)));
+						livingTEntity.addPotionEffect(new PotionEffect(MobEffects.SLOWNESS, 110, Math.min(4, this.toxic-4)));
 					if(this.toxic > 4)
-						livingTEntity.addPotionEffect(new PotionEffect(MobEffects.HUNGER, 100, this.toxic));
+						livingTEntity.addPotionEffect(new PotionEffect(MobEffects.HUNGER, 110, this.toxic));
 					if(this.toxic > 6){
 						if(entity.world.rand.nextInt((int)(2000/this.toxic)) == 0){
-							livingTEntity.addPotionEffect(new PotionEffect(MobEffects.POISON, 100, this.toxic-4));
+							livingTEntity.addPotionEffect(new PotionEffect(MobEffects.POISON, 110, this.toxic-4));
 						}
 					}
 				}
-				if(!hasHazmat || !hasToxFilter){
+				if(!(hasHazmat && hasToxFilter)){
 					if(this.toxic > 8)
-						livingTEntity.addPotionEffect(new PotionEffect(MobEffects.MINING_FATIGUE, 100, this.toxic-8));
+						livingTEntity.addPotionEffect(new PotionEffect(MobEffects.MINING_FATIGUE, 110, this.toxic-8));
 					if(this.toxic > 16)
-						livingTEntity.addPotionEffect(new PotionEffect(MobEffects.INSTANT_DAMAGE, 100, this.toxic-16));
+						livingTEntity.addPotionEffect(new PotionEffect(MobEffects.INSTANT_DAMAGE, 110, this.toxic-16));
 				}
 			}
 		}
@@ -211,7 +209,7 @@ public class ItemHazardModule {
 		}
 
 		if(this.blinding && !ArmorRegistry.hasProtection(entity, EntityEquipmentSlot.HEAD, HazardClass.LIGHT)) {
-			((EntityLivingBase) entity).addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 100, 0));
+			((EntityLivingBase) entity).addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 110, 0));
 		}
 	}
 
@@ -229,9 +227,9 @@ public class ItemHazardModule {
 		if(radiation < 1000000){
 			return "";
 		} else if(radiation < 1000000000){
-			return "M";
+			return I18nUtil.resolveKey("desc.mil");
 		} else{
-			return "G";
+			return I18nUtil.resolveKey("desc.bil");
 		}
 	}
 	
@@ -240,11 +238,11 @@ public class ItemHazardModule {
 		if(this.radiation * tempMod > 0) {
 			list.add(TextFormatting.GREEN + "[" + I18nUtil.resolveKey("trait.radioactive") + "]");
 			float itemRad = radiation * tempMod;
-			list.add(TextFormatting.YELLOW + (Library.roundFloat(getNewValue(itemRad), 3)+ getSuffix(itemRad) + " RAD/s"));
+			list.add(TextFormatting.YELLOW + (Library.roundFloat(getNewValue(itemRad), 3)+ getSuffix(itemRad) + " " + I18nUtil.resolveKey("desc.rads")));
 			
 			if(stack.getCount() > 1) {
 				float stackRad = radiation * tempMod * stack.getCount();
-				list.add(TextFormatting.YELLOW + ("Stack: " + Library.roundFloat(getNewValue(stackRad), 3) + getSuffix(stackRad) + " RAD/s"));
+				list.add(TextFormatting.YELLOW + I18nUtil.resolveKey("desc.stack")+" " + Library.roundFloat(getNewValue(stackRad), 3) + getSuffix(stackRad) + " " + I18nUtil.resolveKey("desc.rads"));
 			}
 		}
 		
@@ -291,9 +289,9 @@ public class ItemHazardModule {
 		
 		if(this.digamma * tempMod > 0) {
 			list.add(TextFormatting.RED + "[" + I18nUtil.resolveKey("trait.digamma") + "]");
-			list.add(TextFormatting.DARK_RED + "" + Library.roundFloat(digamma * tempMod * 1000F, 2) + " mDRX/s");
+			list.add(TextFormatting.DARK_RED + "" + Library.roundFloat(digamma * tempMod * 1000F, 2) + " " + I18nUtil.resolveKey("desc.digammaed"));
 			if(stack.getCount() > 1) {
-				list.add(TextFormatting.DARK_RED + ("Stack: " + Library.roundFloat(digamma * tempMod * stack.getCount() * 1000F, 2) + " mDRX/s"));
+				list.add(TextFormatting.DARK_RED + I18nUtil.resolveKey("desc.stack") + " " + Library.roundFloat(digamma * tempMod * stack.getCount() * 1000F, 2) + " " + I18nUtil.resolveKey("desc.digammaed"));
 			}
 		}
 		
@@ -309,8 +307,7 @@ public class ItemHazardModule {
 	public boolean onEntityItemUpdate(EntityItem item) {
 		
 		if(!item.world.isRemote) {
-			
-			if(this.hydro && (item.isInWater() || item.world.getBlockState(new BlockPos((int)Math.floor(item.posX), (int)Math.floor(item.posY), (int)Math.floor(item.posZ))).getMaterial() == Material.WATER)) {
+			if(this.hydro && (item.isInWater() || item.world.isRainingAt(new BlockPos((int)item.posX, (int)item.posY, (int)item.posZ)) || item.world.getBlockState(new BlockPos((int)item.posX, (int)item.posY, (int)item.posZ)).getMaterial() == Material.WATER)) {
 
 				item.setDead();
 				item.world.newExplosion(item, item.posX, item.posY, item.posZ, 2F, true, true);

@@ -8,9 +8,11 @@ import java.util.LinkedHashMap;
 
 import com.hbm.interfaces.IControlReceiver;
 import com.hbm.render.amlfrom1710.Vec3;
+import com.hbm.lib.Library;
 import com.hbm.tileentity.TileEntityMachineBase;
 import com.hbm.tileentity.machine.rbmk.TileEntityRBMKControlManual.RBMKColor;
 import com.hbm.util.I18nUtil;
+import com.hbm.util.BobMathUtil;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -89,6 +91,8 @@ public class TileEntityRBMKConsole extends TileEntityMachineBase implements ICon
 					columns[index] = new RBMKColumn(rbmk.getConsoleType(), rbmk.getNBTForConsole());
 					columns[index].data.setDouble("heat", rbmk.heat);
 					columns[index].data.setDouble("maxHeat", rbmk.maxHeat());
+					columns[index].data.setDouble("realSimWater", rbmk.water);
+					columns[index].data.setDouble("realSimSteam", rbmk.steam);
 					if(rbmk.isModerated()) columns[index].data.setBoolean("moderated", true); //false is the default anyway and not setting it when we don't need to reduces cruft
 					
 				} else {
@@ -508,6 +512,19 @@ public class TileEntityRBMKConsole extends TileEntityMachineBase implements ICon
 				stats.add(TextFormatting.AQUA + I18nUtil.resolveKey("rbmk.cooler.cooling", this.data.getInteger("cooled") * 20));
 				stats.add(TextFormatting.DARK_AQUA + I18nUtil.resolveKey("rbmk.cooler.cryo", this.data.getInteger("cryo")));
 				break;
+			case OUTGASSER:
+				double flux = this.data.getDouble("usedFlux");
+				double progress = this.data.getDouble("progress");
+				double maxProgress = this.data.getDouble("maxProgress");
+				int eta = 0;
+				if(flux > 0)
+					eta = (int)((maxProgress-progress)/flux);
+
+				stats.add("§6" + I18nUtil.resolveKey("rbmk.outgasser.eta", BobMathUtil.toDate(BobMathUtil.ticksToDate(eta, 72000))));
+				stats.add(TextFormatting.AQUA + I18nUtil.resolveKey("rbmk.outgasser.flux", Library.getShortNumber((long)flux)));
+				stats.add(TextFormatting.DARK_AQUA + I18nUtil.resolveKey("rbmk.outgasser.progress", Library.getShortNumber((long)progress), Library.getShortNumber((long)maxProgress), Library.getPercentage(progress/maxProgress)));
+				stats.add(TextFormatting.YELLOW + I18nUtil.resolveKey("rbmk.outgasser.gas", this.data.getInteger("gas"), this.data.getInteger("maxGas")));
+				break;
 			case CONTROL:
 				if(this.data.hasKey("color")) {
 					short col = this.data.getShort("color");
@@ -618,48 +635,48 @@ public class TileEntityRBMKConsole extends TileEntityMachineBase implements ICon
 			TileEntityRBMKBase column = (TileEntityRBMKBase) te;
 
 			NBTTagCompound column_data = columns[i].data;
-			LinkedHashMap<String, String> data_table = new LinkedHashMap<>();
+			LinkedHashMap<String, Object> data_table = new LinkedHashMap<>();
 			data_table.put("type", column.getConsoleType().name());
-			data_table.put("hullTemp", String.valueOf(column_data.getDouble("heat")));
-			data_table.put("realSimWater", String.valueOf(column_data.getDouble("water")));
-			data_table.put("realSimSteam", String.valueOf(column_data.getDouble("steam")));
-			data_table.put("moderated", String.valueOf(column_data.getBoolean("moderated")));
-			data_table.put("level", String.valueOf(column_data.getDouble("level")));
-			data_table.put("color", String.valueOf(column_data.getShort("color")));
-			data_table.put("enrichment", String.valueOf(column_data.getDouble("enrichment")));
-			data_table.put("xenon", String.valueOf(column_data.getDouble("xenon")));
-			data_table.put("coreSkinTemp", String.valueOf(column_data.getDouble("c_heat")));
-			data_table.put("coreTemp", String.valueOf(column_data.getDouble("c_coreHeat")));
-			data_table.put("coreMaxTemp", String.valueOf(column_data.getDouble("c_maxHeat")));
+			data_table.put("hullTemp", column_data.getDouble("heat"));
+			data_table.put("realSimWater", column_data.getDouble("realSimWater"));
+			data_table.put("realSimSteam", column_data.getDouble("realSimSteam"));
+			data_table.put("moderated", column_data.getBoolean("moderated"));
+			data_table.put("level", column_data.getDouble("level"));
+			data_table.put("color", column_data.getShort("color"));
+			data_table.put("enrichment", column_data.getDouble("enrichment"));
+			data_table.put("xenon", column_data.getDouble("xenon"));
+			data_table.put("coreSkinTemp", column_data.getDouble("c_heat"));
+			data_table.put("coreTemp", column_data.getDouble("c_coreHeat"));
+			data_table.put("coreMaxTemp", column_data.getDouble("c_maxHeat"));
 
 			if(te instanceof TileEntityRBMKRod){
 				TileEntityRBMKRod fuelChannel = (TileEntityRBMKRod)te;
-				data_table.put("fluxSlow", String.valueOf(fuelChannel.fluxSlow));
-				data_table.put("fluxFast", String.valueOf(fuelChannel.fluxFast));
+				data_table.put("fluxSlow", fuelChannel.fluxSlow);
+				data_table.put("fluxFast", fuelChannel.fluxFast);
 			}
 
 			if(te instanceof TileEntityRBMKBoiler){
 				TileEntityRBMKBoiler boiler = (TileEntityRBMKBoiler)te;
-				data_table.put("water", String.valueOf(boiler.feed.getFluidAmount()));
-				data_table.put("steam", String.valueOf(boiler.steam.getFluidAmount()));
+				data_table.put("water", boiler.feed.getFluidAmount());
+				data_table.put("steam", boiler.steam.getFluidAmount());
 			}
 
 			if(te instanceof TileEntityRBMKOutgasser){
 				TileEntityRBMKOutgasser irradiationChannel = (TileEntityRBMKOutgasser)te;
-				data_table.put("fluxProgress", String.valueOf(irradiationChannel.progress));
-				data_table.put("requiredFlux", String.valueOf(irradiationChannel.duration));
+				data_table.put("fluxProgress", irradiationChannel.progress);
+				data_table.put("requiredFlux", irradiationChannel.duration);
 			}
 
 			if(te instanceof TileEntityRBMKCooler){
 				TileEntityRBMKCooler coolingChannel = (TileEntityRBMKCooler)te;
-				data_table.put("degreesCooledPerTick", String.valueOf(coolingChannel.lastCooled));
-				data_table.put("cryogel", String.valueOf(coolingChannel.tank.getFluidAmount()));
+				data_table.put("degreesCooledPerTick", coolingChannel.lastCooled);
+				data_table.put("cryogel", coolingChannel.tank.getFluidAmount());
 			}
 
 			if(te instanceof TileEntityRBMKHeater){
 				TileEntityRBMKHeater heaterChannel = (TileEntityRBMKHeater)te;
-				data_table.put("coolant", String.valueOf(heaterChannel.tanks[0].getFluidAmount()));
-				data_table.put("hotcoolant", String.valueOf(heaterChannel.tanks[1].getFluidAmount()));
+				data_table.put("coolant", heaterChannel.tanks[0].getFluidAmount());
+				data_table.put("hotcoolant", heaterChannel.tanks[1].getFluidAmount());
 			}
 
 			return new Object[] {data_table};
@@ -677,7 +694,7 @@ public class TileEntityRBMKConsole extends TileEntityMachineBase implements ICon
 
 			return new Object[] {data_table};
 		}
-		return new Object[] {"No rbmkrod linked"};
+		return new Object[] {null};//return null, its better to use this to tell there is nothing rather than a string saying so
 	}
 
 	@Callback(doc = "setLevel(level:double); set retraction of all control rods given 0≤level≤1")

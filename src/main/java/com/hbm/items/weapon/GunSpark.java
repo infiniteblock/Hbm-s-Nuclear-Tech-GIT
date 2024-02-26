@@ -9,6 +9,7 @@ import com.hbm.lib.HBMSoundHandler;
 import com.hbm.lib.Library;
 import com.hbm.main.MainRegistry;
 
+import com.hbm.util.I18nUtil;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityLivingBase;
@@ -142,9 +143,9 @@ public class GunSpark extends Item {
 		list.add("'magic does not compute'");
 		list.add("'aeiou'");
 		list.add("");
-		list.add("Ammo: Electromagnetic Cartridge");
+		list.add("Ammo: §bElectromagnetic Cartridge");
 		list.add("Projectiles explode on impact.");
 		list.add("");
-		list.add("[LEGENDARY WEAPON]");
+		list.add(I18nUtil.resolveKey("trait.legendaryweap"));
 	}
 }

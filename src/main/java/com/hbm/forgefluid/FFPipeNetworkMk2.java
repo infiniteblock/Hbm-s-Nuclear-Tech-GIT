@@ -63,7 +63,7 @@ public class FFPipeNetworkMk2 implements IFluidHandler {
 		int remaining = resource.amount;
 		//Drillgon200: Extra hacky compensation
 		int intRoundingCompensation = resource.amount-part*handlers.size();
-		rand.setSeed(((TileEntity)this.fillables.values().iterator().next()).getWorld().getWorldTime());
+		rand.setSeed(((TileEntity)this.fillables.values().iterator().next()).getWorld().getTotalWorldTime());
 		int randomFillIndex = rand.nextInt(handlers.size());
 		for(int i = 0; i < handlers.size(); i++){
 			IFluidHandler consumer = handlers.get(i);
@@ -107,8 +107,13 @@ public class FFPipeNetworkMk2 implements IFluidHandler {
 			return;
 		if(te instanceof IFluidPipeMk2) {
 			pipes.remove(te.getPos());
-		} else if(te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)) {
-			fillables.remove(te.getPos());
+		} else{
+			try{
+				if(te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)) {
+					fillables.remove(te.getPos());
+				}
+			} catch(Throwable t){
+			}
 		}
 	}
 

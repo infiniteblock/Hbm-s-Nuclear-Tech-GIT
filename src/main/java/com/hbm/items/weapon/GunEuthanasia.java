@@ -9,6 +9,7 @@ import com.hbm.items.ModItems;
 import com.hbm.lib.HBMSoundHandler;
 import com.hbm.lib.Library;
 
+import com.hbm.util.I18nUtil;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityLivingBase;
@@ -93,11 +94,11 @@ public class GunEuthanasia extends Item {
 	public void addInformation(ItemStack stack, World worldIn, List<String> list, ITooltipFlag flagIn) {
 		list.add("Say hello to my little syringe gun!");
 		list.add("");
-		list.add("Ammo: Syringe");
+		list.add("Ammo: §5Syringe");
 		list.add("Damage: 1 - 4");
 		list.add("Syringes have a 20% chance to instakill the enemy.");
 		list.add("");
-		list.add("[LEGENDARY WEAPON]");
+		list.add(I18nUtil.resolveKey("trait.legendaryweap"));
 	}
 	
 	@Override

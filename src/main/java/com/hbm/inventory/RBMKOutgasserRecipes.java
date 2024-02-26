@@ -43,10 +43,11 @@ public class RBMKOutgasserRecipes {
 		addRecipe(360000, GOLD.ingot(), new ItemStack(ModItems.ingot_au198));
 		addRecipe(360000 * ItemHazard.nugget, GOLD.nugget(), new ItemStack(ModItems.nugget_au198));
 		addRecipe(360000 * ItemHazard.powder, GOLD.dust(), new ItemStack(ModItems.powder_au198));
+		addRecipe(360000 * ItemHazard.powder_tiny, GOLD.dustTiny(), new ItemStack(ModItems.powder_au198_tiny));
 		addRecipe(360000 * ItemHazard.powder * ItemHazard.block, ModBlocks.sand_gold, new ItemStack(ModBlocks.sand_gold198));
 		addRecipe(360000 * ItemHazard.block, GOLD.block(), new ItemStack(ModBlocks.block_au198));
 		
-		addRecipe(90000, TH232.ingot(), new ItemStack(ModItems.ingot_u233));
+		addRecipe(90000, TH232.ingot(), new ItemStack(ModItems.ingot_thorium_fuel));
 		addRecipe(90000 * ItemHazard.billet, TH232.billet(), new ItemStack(ModItems.billet_thorium_fuel));
 		addRecipe(90000 * ItemHazard.nugget, TH232.nugget(), new ItemStack(ModItems.nugget_thorium_fuel));
 		addRecipe(90000 * ItemHazard.block, TH232.block(), new ItemStack(ModBlocks.block_thorium_fuel));
@@ -123,10 +124,12 @@ public class RBMKOutgasserRecipes {
 		addRecipe(14000000, PB.ingot(), new ItemStack(ModItems.ingot_pb209));
 		addRecipe(14000000 * ItemHazard.nugget, PB.nugget(), new ItemStack(ModItems.nugget_pb209));
 		addRecipe(14000000 * ItemHazard.powder, PB.dust(), new ItemStack(ModItems.powder_pb209));
+		addRecipe(14000000 * ItemHazard.powder_tiny, PB.dustTiny(), new ItemStack(ModItems.powder_pb209_tiny));
 
 		addRecipe(1800000, NB.ingot(), new ItemStack(ModItems.ingot_technetium));
 		addRecipe(32000, ModItems.nugget_unobtainium_lesser, new ItemStack(ModItems.nugget_unobtainium));
-		addRecipe(3000, ModBlocks.block_scrap, new ItemStack(ModBlocks.block_fallout));
+		addRecipe(300000, ModItems.scrap, new ItemStack(ModItems.fallout));
+		addRecipe(3000000, ModBlocks.block_scrap, new ItemStack(ModBlocks.block_fallout));
 		addRecipe(2000, Blocks.STONE, new ItemStack(ModBlocks.sellafield_slaked));
 		addRecipe(4000, ModBlocks.sellafield_slaked, new ItemStack(ModBlocks.sellafield_0));
 		addRecipe(8000, ModBlocks.sellafield_0, new ItemStack(ModBlocks.sellafield_1));
@@ -151,7 +154,8 @@ public class RBMKOutgasserRecipes {
 	}
 
 	public static void addRecipe(int requiredFlux, String in, ItemStack out) {
-		rbmkOutgasserRecipes.put(new ComparableStack(OreDictionary.getOres(in).get(0)), new Object[] {requiredFlux, out});
+		if(!OreDictionary.getOres(in).isEmpty() && OreDictionary.getOres(in).get(0) != null && !OreDictionary.getOres(in).get(0).isEmpty())
+			rbmkOutgasserRecipes.put(new ComparableStack(OreDictionary.getOres(in).get(0)), new Object[] {requiredFlux, out});
 	}
 
 	public static void addRecipe(float requiredFlux, String in, ItemStack out) {
